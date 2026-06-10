@@ -6,12 +6,14 @@ FROM node:22-bookworm-slim
 # Hugging Face Spaces route external traffic to port 7860 by default.
 ENV YOUTUBE_DL_SKIP_PYTHON_CHECK=1 \
     NODE_ENV=production \
-    PORT=7860
+    PORT=7860 \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 # On Linux, yt-dlp runs as a Python zipapp and needs a Python 3 interpreter at
-# runtime (ffmpeg is already provided by the ffmpeg-static npm package).
+# runtime; ca-certificates lets its TLS connections to YouTube verify. (ffmpeg
+# is already provided by the ffmpeg-static npm package.)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 \
+    && apt-get install -y --no-install-recommends python3 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # The official Node image already ships a 'node' user with UID 1000, which is
