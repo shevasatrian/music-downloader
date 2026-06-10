@@ -8,20 +8,19 @@ ENV YOUTUBE_DL_SKIP_PYTHON_CHECK=1 \
     NODE_ENV=production \
     PORT=7860
 
-# Hugging Face Spaces run containers as user id 1000; set that up so the app
-# can write its temp downloads/ dir.
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user
-WORKDIR /home/user/app
+# The official Node image already ships a 'node' user with UID 1000, which is
+# exactly what Hugging Face Spaces expects the container to run as.
+USER node
+ENV HOME=/home/node
+WORKDIR /home/node/app
 
 # Install dependencies first for better layer caching. The postinstall steps
 # fetch the Linux yt-dlp and ffmpeg-static binaries.
-COPY --chown=user:user package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
 # Copy the application source.
-COPY --chown=user:user . .
+COPY --chown=node:node . .
 
 EXPOSE 7860
 CMD ["node", "server.js"]
