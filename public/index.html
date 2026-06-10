@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube → MP3</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>🎵 YouTube → MP3</h1>
+        <p class="subtitle">Paste a YouTube link, preview it, and download the audio.</p>
+      </header>
+
+      <form id="url-form" class="input-row" autocomplete="off">
+        <input
+          id="url-input"
+          type="url"
+          placeholder="https://www.youtube.com/watch?v=..."
+          required
+        />
+        <button id="fetch-btn" type="submit">Fetch</button>
+      </form>
+
+      <p id="message" class="message" role="alert"></p>
+
+      <section id="preview" class="preview hidden">
+        <img id="thumb" class="thumb" alt="thumbnail" />
+        <div class="meta">
+          <h2 id="title"></h2>
+          <p id="uploader" class="uploader"></p>
+          <p id="duration" class="duration"></p>
+          <button id="download-btn" type="button">Download MP3</button>
+        </div>
+      </section>
+
+      <section id="progress-wrap" class="progress-wrap hidden">
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="progress-label" class="progress-label"></p>
+      </section>
+
+      <footer class="disclaimer">
+        For personal use with content you have the right to download.
+      </footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
