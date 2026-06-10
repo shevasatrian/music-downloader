@@ -1,7 +1,11 @@
 # 🎵 YouTube → MP3 Downloader
 
 A simple web app: paste a YouTube link, preview it (title, thumbnail, duration), then download
-either the **audio as an MP3** or the **full video at best available quality** (merged MP4).
+either the **audio as an MP3** or the **video as an MP4** at a chosen quality (Best / 1080p / 720p).
+
+Video downloads prefer **H.264 + AAC** so the resulting MP4 plays natively in Windows Media Player
+and other basic players. Because YouTube only serves resolutions above 1080p as VP9/AV1 (which many
+players can't decode), "Best" means the best *compatible* quality — effectively up to 1080p.
 
 Built with **Node.js + Express**, using **yt-dlp** (bundled binary) and a **bundled static ffmpeg**
 for audio extraction — no system-wide yt-dlp/ffmpeg/Python install required.
@@ -30,9 +34,10 @@ Then open <http://localhost:3000>. Set a custom port with the `PORT` env var.
 ## How it works
 
 - `POST /api/info` — returns video metadata (title, thumbnail, duration, uploader).
-- `GET /api/download?url=...&format=mp3|video` — a Server-Sent Events stream that runs yt-dlp +
-  ffmpeg, emits `progress` events, then a `done` event with a one-time download token. `format=mp3`
-  (default) extracts audio; `format=video` downloads best video + audio and merges to MP4.
+- `GET /api/download?url=...&format=mp3|video&quality=best|1080|720` — a Server-Sent Events stream
+  that runs yt-dlp + ffmpeg, emits `progress` events, then a `done` event with a one-time download
+  token. `format=mp3` (default) extracts audio; `format=video` downloads H.264+AAC video + audio and
+  merges to MP4. `quality` (video only) caps the resolution.
 - `GET /api/file?token=...` — serves the finished MP3 as a download, then deletes the temp file.
   Abandoned files are swept after 10 minutes, and any leftovers are cleared on server startup.
 

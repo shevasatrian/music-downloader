@@ -32,44 +32,58 @@ export async function getInfo(url) {
   };
 }
 
-// Supported output formats and the yt-dlp options that produce them.
-const FORMATS = {
-  // Audio only, transcoded to MP3.
-  mp3: {
-    ext: 'mp3',
-    options: { extractAudio: true, audioFormat: 'mp3', audioQuality: 0 /* best */ },
-  },
-  // Best video + best audio, merged into a single MP4 (no re-encode).
-  video: {
-    ext: 'mp4',
-    options: { format: 'bv*+ba/b', mergeOutputFormat: 'mp4' },
-  },
-};
+// File extension produced for each output format.
+const EXTENSIONS = { mp3: 'mp3', video: 'mp4' };
 
 /** File extension produced for a given format key ('mp3' | 'video'). */
 export function getExtension(format) {
-  return FORMATS[format]?.ext ?? null;
+  return EXTENSIONS[format] ?? null;
+}
+
+// Build the yt-dlp -f selector for video. We deliberately prefer H.264 (avc1)
+// video + AAC (mp4a) audio in an MP4 container, because that combo plays
+// natively in Windows Media Player and other basic players. YouTube only serves
+// resolutions above 1080p as VP9/AV1, which many players can't decode — so
+// "best" here means best *compatible* quality (effectively up to 1080p), with a
+// final fallback to whatever is available if no H.264 stream exists.
+function videoFormatSelector(quality) {
+  const cap = quality === '1080' ? '[height<=1080]' : quality === '720' ? '[height<=720]' : '';
+  return [
+    `bv*[vcodec^=avc1]${cap}+ba[acodec^=mp4a]`, // H.264 + AAC (most compatible)
+    `bv*[vcodec^=avc1]${cap}+ba`, // H.264 + any audio
+    `b[ext=mp4]${cap}`, // pre-muxed mp4
+    `b${cap}`, // anything that fits the cap
+  ].join('/');
+}
+
+// yt-dlp options for a given format/quality.
+function buildOptions(format, quality) {
+  if (format === 'mp3') {
+    return { extractAudio: true, audioFormat: 'mp3', audioQuality: 0 /* best */ };
+  }
+  return { format: videoFormatSelector(quality), mergeOutputFormat: 'mp4' };
 }
 
 /**
- * Download a video as either an MP3 (audio) or a merged best-quality MP4 (video).
+ * Download a video as either an MP3 (audio) or a merged MP4 (video).
  * @param {string} url - YouTube URL
  * @param {string} jobId - unique id used for the temp output filename
  * @param {'mp3'|'video'} format - desired output
+ * @param {'best'|'1080'|'720'} quality - max video quality (ignored for mp3)
  * @param {(percent:number, stage:string)=>void} onProgress - progress callback
  * @returns {Promise<string>} absolute path to the resulting file
  */
-export function downloadMedia(url, jobId, format, onProgress) {
-  const cfg = FORMATS[format];
-  if (!cfg) return Promise.reject(new Error(`Unsupported format: ${format}`));
+export function downloadMedia(url, jobId, format, quality, onProgress) {
+  const ext = getExtension(format);
+  if (!ext) return Promise.reject(new Error(`Unsupported format: ${format}`));
 
   const outputTemplate = path.join(DOWNLOADS_DIR, `${jobId}.%(ext)s`);
-  const finalPath = path.join(DOWNLOADS_DIR, `${jobId}.${cfg.ext}`);
+  const finalPath = path.join(DOWNLOADS_DIR, `${jobId}.${ext}`);
 
   return new Promise((resolve, reject) => {
     // Raw exec() returns a child process (execa) whose stdout we parse for progress.
     const subprocess = ytdlpExec.exec(url, {
-      ...cfg.options,
+      ...buildOptions(format, quality),
       ffmpegLocation: FFMPEG_PATH,
       output: outputTemplate,
       noPlaylist: true,

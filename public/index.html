@@ -33,9 +33,14 @@
           <p id="duration" class="duration"></p>
           <div class="actions">
             <button id="download-mp3" type="button">🎵 MP3 (audio)</button>
-            <button id="download-video" type="button" class="secondary">
-              🎬 Video (best quality)
-            </button>
+            <div class="video-action">
+              <button id="download-video" type="button" class="secondary">🎬 Video</button>
+              <select id="quality" aria-label="Video quality">
+                <option value="best">Best</option>
+                <option value="1080">1080p</option>
+                <option value="720">720p</option>
+              </select>
+            </div>
           </div>
         </div>
       </section>

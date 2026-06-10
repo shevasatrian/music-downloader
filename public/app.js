@@ -12,6 +12,7 @@ const uploaderEl = document.getElementById('uploader');
 const durationEl = document.getElementById('duration');
 const downloadMp3Btn = document.getElementById('download-mp3');
 const downloadVideoBtn = document.getElementById('download-video');
+const qualitySelect = document.getElementById('quality');
 const downloadButtons = [downloadMp3Btn, downloadVideoBtn];
 
 const progressWrap = document.getElementById('progress-wrap');
@@ -87,9 +88,10 @@ function startDownload(format) {
   const processingLabel =
     format === 'video' ? 'Merging video + audio…' : 'Converting to MP3…';
 
-  const source = new EventSource(
-    `/api/download?url=${encodeURIComponent(currentUrl)}&format=${format}`
-  );
+  const params = new URLSearchParams({ url: currentUrl, format });
+  if (format === 'video') params.set('quality', qualitySelect.value);
+
+  const source = new EventSource(`/api/download?${params.toString()}`);
   activeSource = source;
 
   source.addEventListener('progress', (e) => {

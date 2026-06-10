@@ -148,6 +148,26 @@ button.secondary:hover:not(:disabled) {
   background: rgba(255, 59, 92, 0.12);
 }
 
+.video-action {
+  display: flex;
+  gap: 0.4rem;
+}
+
+#quality {
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+#quality:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .progress-wrap {
   margin-top: 1.5rem;
 }
