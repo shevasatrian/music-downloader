@@ -1,3 +1,13 @@
+---
+title: Music Downloader
+emoji: 🎵
+colorFrom: red
+colorTo: pink
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🎵 YouTube → MP3 Downloader
 
 A simple web app: paste a YouTube link, preview it (title, thumbnail, duration), then download
@@ -30,6 +40,25 @@ npm start
 ```
 
 Then open <http://localhost:3000>. Set a custom port with the `PORT` env var.
+
+## Deploy to Hugging Face Spaces (free, permanent URL, auto-deploy)
+
+This repo is set up to deploy as a **Docker Space** on Hugging Face — a free, permanent
+`https://<user>-<space>.hf.space` URL with no domain or credit card required. The included
+`Dockerfile` and `app_port: 7860` in the YAML header above configure the Space, and the GitHub
+Action in `.github/workflows/deploy-hf.yml` mirrors every push to `main` into the Space, which then
+rebuilds and redeploys automatically.
+
+One-time setup:
+
+1. Create a free Hugging Face account and a **Docker** Space.
+2. Create a **write** access token (Settings → Access Tokens).
+3. In the GitHub repo, add a secret `HF_TOKEN` and variables `HF_USERNAME` / `HF_SPACE`
+   (Settings → Secrets and variables → Actions).
+4. Push to `main` — the Action syncs to the Space and it builds.
+
+> **Heads up:** Hugging Face runs in a datacenter, so YouTube may occasionally block downloads from
+> the Space's IP. Free Spaces also sleep after inactivity and wake on the next visit.
 
 ## Sharing it publicly (Cloudflare Tunnel — free, no card)
 
