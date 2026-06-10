@@ -88,6 +88,17 @@ function startDownload(format) {
   const processingLabel =
     format === 'video' ? 'Merging video + audio…' : 'Converting to MP3…';
 
+  // The bar only moves forward and reaches 100% only when the file is actually
+  // ready: downloading fills 0–90%, post-processing creeps 90→99%, and the
+  // 'done' event completes it to 100% and starts the file download.
+  let displayed = 0;
+  let creepTimer = null;
+
+  const render = (pct) => {
+    displayed = Math.min(100, Math.max(displayed, pct));
+    progressFill.style.width = `${displayed}%`;
+  };
+
   const params = new URLSearchParams({ url: currentUrl, format });
   if (format === 'video') params.set('quality', qualitySelect.value);
 
@@ -97,19 +108,27 @@ function startDownload(format) {
   source.addEventListener('progress', (e) => {
     const { percent, stage } = JSON.parse(e.data);
     if (stage === 'converting') {
-      progressFill.style.width = '100%';
+      // Enter the finishing zone, then creep slowly so a long merge/convert
+      // doesn't look frozen — but never reach 100% until 'done'.
+      render(90);
       progressLabel.textContent = processingLabel;
+      if (!creepTimer) {
+        creepTimer = setInterval(() => {
+          if (displayed < 99) render(displayed + 1);
+        }, 400);
+      }
     } else {
-      progressFill.style.width = `${percent}%`;
-      progressLabel.textContent = `Downloading… ${percent.toFixed(1)}%`;
+      // Downloading: map the real percent into the first 90% of the bar.
+      render(percent * 0.9);
+      progressLabel.textContent = `Downloading… ${Math.round(displayed)}%`;
     }
   });
 
   source.addEventListener('done', (e) => {
     const { token } = JSON.parse(e.data);
-    progressFill.style.width = '100%';
-    progressLabel.textContent = 'Done! Saving file…';
-    // Trigger the browser save dialog.
+    render(100);
+    progressLabel.textContent = 'Complete — starting download…';
+    // File is ready: trigger the browser save dialog.
     window.location = `/api/file?token=${encodeURIComponent(token)}`;
     cleanup();
   });
@@ -127,6 +146,8 @@ function startDownload(format) {
   });
 
   function cleanup() {
+    if (creepTimer) clearInterval(creepTimer);
+    creepTimer = null;
     source.close();
     activeSource = null;
     downloadButtons.forEach((b) => (b.disabled = false));

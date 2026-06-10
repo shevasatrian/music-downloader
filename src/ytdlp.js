@@ -89,8 +89,10 @@ export function downloadMedia(url, jobId, format, quality, onProgress) {
       noPlaylist: true,
       noWarnings: true,
       newline: true,
-      // Emit a clean, parseable percentage on the download stage.
-      progressTemplate: 'download:%(progress._percent_str)s',
+      // Emit a clean, parseable percentage on each download progress update.
+      // 'download:' is yt-dlp's progress-type selector (it's stripped from the
+      // output), so we add our own 'PROGRESS:' marker to the template body.
+      progressTemplate: 'download:PROGRESS:%(progress._percent_str)s',
     });
 
     let stderr = '';
@@ -99,8 +101,8 @@ export function downloadMedia(url, jobId, format, quality, onProgress) {
       const text = line.trim();
       if (!text) return;
 
-      // Our custom template lines look like: "download:  47.3%"
-      const m = text.match(/download:\s*([\d.]+)%/i);
+      // Our custom template lines look like: "PROGRESS:  47.3%"
+      const m = text.match(/PROGRESS:\s*([\d.]+)%/i);
       if (m) {
         onProgress(parseFloat(m[1]), 'downloading');
         return;
