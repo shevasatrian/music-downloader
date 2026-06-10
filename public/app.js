@@ -10,7 +10,9 @@ const thumb = document.getElementById('thumb');
 const titleEl = document.getElementById('title');
 const uploaderEl = document.getElementById('uploader');
 const durationEl = document.getElementById('duration');
-const downloadBtn = document.getElementById('download-btn');
+const downloadMp3Btn = document.getElementById('download-mp3');
+const downloadVideoBtn = document.getElementById('download-video');
+const downloadButtons = [downloadMp3Btn, downloadVideoBtn];
 
 const progressWrap = document.getElementById('progress-wrap');
 const progressFill = document.getElementById('progress-fill');
@@ -69,23 +71,32 @@ form.addEventListener('submit', async (e) => {
 });
 
 // --- Step 2: download with progress ----------------------------------------
-downloadBtn.addEventListener('click', () => {
+downloadMp3Btn.addEventListener('click', () => startDownload('mp3'));
+downloadVideoBtn.addEventListener('click', () => startDownload('video'));
+
+function startDownload(format) {
   if (!currentUrl || activeSource) return;
 
   setMessage('');
-  downloadBtn.disabled = true;
+  downloadButtons.forEach((b) => (b.disabled = true));
   progressWrap.classList.remove('hidden');
   progressFill.style.width = '0%';
   progressLabel.textContent = 'Starting…';
 
-  const source = new EventSource(`/api/download?url=${encodeURIComponent(currentUrl)}`);
+  // Label shown during the ffmpeg post-processing stage.
+  const processingLabel =
+    format === 'video' ? 'Merging video + audio…' : 'Converting to MP3…';
+
+  const source = new EventSource(
+    `/api/download?url=${encodeURIComponent(currentUrl)}&format=${format}`
+  );
   activeSource = source;
 
   source.addEventListener('progress', (e) => {
     const { percent, stage } = JSON.parse(e.data);
     if (stage === 'converting') {
       progressFill.style.width = '100%';
-      progressLabel.textContent = 'Converting to MP3…';
+      progressLabel.textContent = processingLabel;
     } else {
       progressFill.style.width = `${percent}%`;
       progressLabel.textContent = `Downloading… ${percent.toFixed(1)}%`;
@@ -116,6 +127,6 @@ downloadBtn.addEventListener('click', () => {
   function cleanup() {
     source.close();
     activeSource = null;
-    downloadBtn.disabled = false;
+    downloadButtons.forEach((b) => (b.disabled = false));
   }
-});
+}

@@ -1,7 +1,7 @@
 # 🎵 YouTube → MP3 Downloader
 
-A simple web app: paste a YouTube link, preview the track (title, thumbnail, duration), and
-download the audio as an MP3 for offline listening.
+A simple web app: paste a YouTube link, preview it (title, thumbnail, duration), then download
+either the **audio as an MP3** or the **full video at best available quality** (merged MP4).
 
 Built with **Node.js + Express**, using **yt-dlp** (bundled binary) and a **bundled static ffmpeg**
 for audio extraction — no system-wide yt-dlp/ffmpeg/Python install required.
@@ -30,8 +30,9 @@ Then open <http://localhost:3000>. Set a custom port with the `PORT` env var.
 ## How it works
 
 - `POST /api/info` — returns video metadata (title, thumbnail, duration, uploader).
-- `GET /api/download?url=...` — a Server-Sent Events stream that runs yt-dlp + ffmpeg, emits
-  `progress` events, then a `done` event with a one-time download token.
+- `GET /api/download?url=...&format=mp3|video` — a Server-Sent Events stream that runs yt-dlp +
+  ffmpeg, emits `progress` events, then a `done` event with a one-time download token. `format=mp3`
+  (default) extracts audio; `format=video` downloads best video + audio and merges to MP4.
 - `GET /api/file?token=...` — serves the finished MP3 as a download, then deletes the temp file.
   Abandoned files are swept after 10 minutes, and any leftovers are cleared on server startup.
 

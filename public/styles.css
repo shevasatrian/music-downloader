@@ -131,9 +131,21 @@ button:disabled {
   font-size: 0.9rem;
 }
 
-#download-btn {
+.actions {
   margin-top: auto;
-  align-self: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: rgba(255, 59, 92, 0.12);
 }
 
 .progress-wrap {

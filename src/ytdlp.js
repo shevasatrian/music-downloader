@@ -32,23 +32,44 @@ export async function getInfo(url) {
   };
 }
 
+// Supported output formats and the yt-dlp options that produce them.
+const FORMATS = {
+  // Audio only, transcoded to MP3.
+  mp3: {
+    ext: 'mp3',
+    options: { extractAudio: true, audioFormat: 'mp3', audioQuality: 0 /* best */ },
+  },
+  // Best video + best audio, merged into a single MP4 (no re-encode).
+  video: {
+    ext: 'mp4',
+    options: { format: 'bv*+ba/b', mergeOutputFormat: 'mp4' },
+  },
+};
+
+/** File extension produced for a given format key ('mp3' | 'video'). */
+export function getExtension(format) {
+  return FORMATS[format]?.ext ?? null;
+}
+
 /**
- * Download + transcode a video's audio to MP3.
+ * Download a video as either an MP3 (audio) or a merged best-quality MP4 (video).
  * @param {string} url - YouTube URL
  * @param {string} jobId - unique id used for the temp output filename
+ * @param {'mp3'|'video'} format - desired output
  * @param {(percent:number, stage:string)=>void} onProgress - progress callback
- * @returns {Promise<string>} absolute path to the resulting .mp3 file
+ * @returns {Promise<string>} absolute path to the resulting file
  */
-export function downloadAudio(url, jobId, onProgress) {
+export function downloadMedia(url, jobId, format, onProgress) {
+  const cfg = FORMATS[format];
+  if (!cfg) return Promise.reject(new Error(`Unsupported format: ${format}`));
+
   const outputTemplate = path.join(DOWNLOADS_DIR, `${jobId}.%(ext)s`);
-  const finalPath = path.join(DOWNLOADS_DIR, `${jobId}.mp3`);
+  const finalPath = path.join(DOWNLOADS_DIR, `${jobId}.${cfg.ext}`);
 
   return new Promise((resolve, reject) => {
     // Raw exec() returns a child process (execa) whose stdout we parse for progress.
     const subprocess = ytdlpExec.exec(url, {
-      extractAudio: true,
-      audioFormat: 'mp3',
-      audioQuality: 0, // best
+      ...cfg.options,
       ffmpegLocation: FFMPEG_PATH,
       output: outputTemplate,
       noPlaylist: true,
@@ -70,8 +91,8 @@ export function downloadAudio(url, jobId, onProgress) {
         onProgress(parseFloat(m[1]), 'downloading');
         return;
       }
-      // ffmpeg post-processing stage.
-      if (/\[ExtractAudio\]|Destination:|Deleting original file/i.test(text)) {
+      // ffmpeg post-processing stage (MP3 extraction or video/audio merge).
+      if (/\[ExtractAudio\]|\[Merger\]|Merging formats|Deleting original file/i.test(text)) {
         onProgress(100, 'converting');
       }
     };
