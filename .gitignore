@@ -4,3 +4,4 @@ downloads/
 .DS_Store
 .hf-token.txt
 .env
+start-public.ps1
