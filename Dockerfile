@@ -8,6 +8,12 @@ ENV YOUTUBE_DL_SKIP_PYTHON_CHECK=1 \
     NODE_ENV=production \
     PORT=7860
 
+# On Linux, yt-dlp runs as a Python zipapp and needs a Python 3 interpreter at
+# runtime (ffmpeg is already provided by the ffmpeg-static npm package).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+
 # The official Node image already ships a 'node' user with UID 1000, which is
 # exactly what Hugging Face Spaces expects the container to run as.
 USER node
