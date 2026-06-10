@@ -60,26 +60,6 @@ One-time setup:
 > **Heads up:** Hugging Face runs in a datacenter, so YouTube may occasionally block downloads from
 > the Space's IP. Free Spaces also sleep after inactivity and wake on the next visit.
 
-## Sharing it publicly (Cloudflare Tunnel — free, no card)
-
-This app needs a real OS process (it runs the `yt-dlp` and `ffmpeg` binaries), so it can't run on
-serverless hosts like Cloudflare Pages/Workers or Vercel. The simplest free way to make it reachable
-from anywhere is a **Cloudflare Quick Tunnel**, which exposes the app running on *your* machine. It
-needs no Cloudflare account, no domain, and no credit card — and because it runs on your home
-connection, YouTube is far less likely to block downloads than from a datacenter IP.
-
-1. Install once: `winget install --id Cloudflare.cloudflared`
-2. Terminal 1 — start the app: `npm start`
-3. Terminal 2 — open the tunnel: `npm run tunnel`
-
-`cloudflared` prints a public URL like `https://<random>.trycloudflare.com` — share that. The app is
-reachable only while both your PC and the tunnel are running, and the URL changes each time you start
-a new Quick Tunnel. (For a stable custom URL you'd need a free Cloudflare account plus a domain and a
-*named* tunnel.)
-
-> **Heads up:** the tunnel makes your downloader publicly accessible — anyone with the URL can use it.
-> Only share it with people you trust, and stop the tunnel (Ctrl+C) when you're done.
-
 ## How it works
 
 - `POST /api/info` — returns video metadata (title, thumbnail, duration, uploader).

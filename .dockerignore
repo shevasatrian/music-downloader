@@ -3,4 +3,5 @@ downloads
 .git
 .github
 *.log
-.cf-token.txt
+.hf-token.txt
+.env
